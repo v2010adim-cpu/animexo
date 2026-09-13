@@ -4,16 +4,15 @@ import { useState, useEffect } from "react";
 export default function Home() {
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [animeList, setAnimeList] = useState([]);
+  const [animeList, setAnimeList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Загружаем топ аниме при открытии
   useEffect(() => {
     async function loadAnime() {
       try {
-        const res = await fetch("https://api.jikan.moe/v4/top/anime?limit=24");
+        const res = await fetch("https://anilibria.top/api/v1/anime/catalog/releases?limit=24");
         const data = await res.json();
-        setAnimeList(data.data);
+        setAnimeList(data.data || []);
       } catch (err) {
         console.error("Ошибка загрузки:", err);
       } finally {
@@ -23,11 +22,11 @@ export default function Home() {
     loadAnime();
   }, []);
 
-  // Фильтр для поиска
   const suggestions = animeList
-    .filter((anime) =>
-      anime.title.toLowerCase().includes(search.toLowerCase())
-    )
+    .filter((anime) => {
+      const title = anime.name?.main || "";
+      return title.toLowerCase().includes(search.toLowerCase());
+    })
     .slice(0, 8);
 
   return (
@@ -56,20 +55,20 @@ export default function Home() {
                   <div
                     key={index}
                     onClick={() => {
-                      setSearch(anime.title);
+                      setSearch(anime.name?.main || "");
                       setIsOpen(false);
                     }}
                     className="flex items-center gap-3 px-3 py-2 hover:bg-zinc-800 cursor-pointer"
                   >
                     <img
-                      src={anime.images.jpg.image_url}
-                      alt={anime.title}
+                     src={anime.poster?.src ? `https://anilibria.top${anime.poster.src}` : "/1.jpg"}
+                      alt={anime.name?.main || ""}
                       className="w-10 h-14 object-cover rounded"
                     />
                     <div className="flex-1">
-                      <p className="text-sm font-semibold">{anime.title}</p>
+                      <p className="text-sm font-semibold">{anime.name?.main}</p>
                       <p className="text-xs text-zinc-400">
-                        {anime.year || "—"} • ★ {anime.score || "—"}
+                        {anime.year || "—"} • ★ {anime.rating?.score || "—"}
                       </p>
                     </div>
                   </div>
@@ -100,16 +99,16 @@ export default function Home() {
               >
                 <div className="aspect-[2/3] overflow-hidden relative">
                   <img
-                    src={anime.images.jpg.image_url}
-                    alt={anime.title}
+                  src={anime.poster?.src ? `https://anilibria.top${anime.poster.src}` : "/1.jpg"}
+                    alt={anime.name?.main || ""}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute top-2 right-2 bg-black/70 text-orange-400 px-2 py-1 rounded font-bold text-sm">
-                    {anime.score || "—"}
+                    {anime.rating?.score || "—"}
                   </div>
                 </div>
                 <div className="p-2">
-                  <h3 className="font-semibold text-xs line-clamp-2">{anime.title}</h3>
+                  <h3 className="font-semibold text-xs line-clamp-2">{anime.name?.main}</h3>
                   <p className="text-zinc-400 text-xs mt-1">
                     {anime.year || "—"}
                   </p>
